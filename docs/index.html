@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>日本のEV（BEV）登録台数 インフォグラフィック</title>
+<meta name="description" content="自販連「燃料別登録台数統計」で、日本の登録乗用車BEVを2021年から2026年8月まで追うインフォグラフィック。" />
+
+<!-- OGP -->
+<meta property="og:title" content="電気自動車は誰が売っているのか — 日本のBEV登録台数" />
+<meta property="og:description" content="自販連「燃料別登録台数統計」で、登録乗用車のBEVをメーカー別に可視化。" />
+<meta property="og:type" content="website" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%2307090d'/%3E%3Crect x='60' y='120' width='18' height='40' fill='%23e8503a'/%3E%3Crect x='86' y='95' width='18' height='65' fill='%235aa9ff'/%3E%3Crect x='112' y='108' width='18' height='52' fill='%233ddc97'/%3E%3Crect x='138' y='136' width='18' height='24' fill='%23a78bfa'/%3E%3Ctext x='44' y='70' font-family='Helvetica,Arial,sans-serif' font-size='34' font-weight='700' fill='%23c6f24e'%3EEV%3C/text%3E%3C/svg%3E" />
+
+<style>
+  html, body { margin: 0; padding: 0; background: #07090d; }
+  * { box-sizing: border-box; }
+  a { color: #c6f24e; text-decoration: none; }
+  a:hover { color: #e4ff96; text-decoration: underline; }
+  ::selection { background: #c6f24e; color: #07090d; }
+  #app { background:#07090d; color:#eef2f7; font-family:'Noto Sans JP',sans-serif; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+
+  @keyframes evFadeUp { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+  @keyframes evFade   { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes evPop    { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+  @keyframes evGrowX  { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes evGrowY  { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes evDraw   { from { stroke-dashoffset: 1400; } to { stroke-dashoffset: 0; } }
+  @keyframes evMarquee{ from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes evGlow   { 0%,100% { opacity: .35; } 50% { opacity: .75; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+
+  /* loading / fallback */
+  #boot { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#07090d; z-index:50;
+          font-family:'Space Grotesk',sans-serif; letter-spacing:.24em; font-size:12px; color:#55616f; }
+  #boot.hide { display:none; }
+  .bootDot { width:8px; height:8px; border-radius:50%; background:#c6f24e; margin-right:12px; box-shadow:0 0 12px #c6f24e; animation:evGlow 1.4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+  <div id="boot"><span class="bootDot"></span>LOADING DATA…</div>
+  <div id="app"></div>
+
+  <!-- 実行時に読み込めない環境（file:// など）向けの埋め込みフォールバック。
+       正の情報源はあくまで ./ev-registrations.json。GitHub Pages 上では常に外部JSONが優先される。 -->
+  <script id="ev-data-fallback" type="application/json">
+{
+  "meta": {
+    "updated": "2026-09-21",
+    "unit": "台",
+    "trendMax": 80000,
+    "source": "一般社団法人日本自動車販売協会連合会「燃料別登録台数」",
+    "sourceUrl": "https://www.jada.or.jp/pages/342/",
+    "sourceDetail": "（年別統計 2021年〜2025年／燃料別メーカー別登録台数 月報 2026年1月〜8月）",
+    "note": "自販連『燃料別登録台数統計』より、乗用車のEV（BEV）を集計。登録車（乗用車）のみで軽自動車は含まない。日本メーカーの海外生産車は輸入車に計上される。PHV・HV・FCVは含まない。輸入車はブランド別の内訳が公表されていないため合計値。2026年は月報1月〜8月の累計で、通年値ではない。スズキ・ダイハツは同期間にEVの登録がないため掲載していない。"
+  },
+  "partial": {
+    "2026": { "throughMonth": 8, "label": "1〜8月" }
+  },
+  "makers": {
+    "import":     { "name": "輸入車（合計）", "short": "輸入車", "origin": "海外", "color": "#e8503a", "dark": "#7a2418" },
+    "toyota":     { "name": "トヨタ",         "short": "トヨタ", "origin": "日本", "color": "#5aa9ff", "dark": "#1f4d80" },
+    "nissan":     { "name": "日産",           "short": "日産",   "origin": "日本", "color": "#3ddc97", "dark": "#1c6b4c" },
+    "honda":      { "name": "ホンダ",         "short": "ホンダ", "origin": "日本", "color": "#a78bfa", "dark": "#4c3a86" },
+    "subaru":     { "name": "SUBARU",        "short": "SUBARU", "origin": "日本", "color": "#58e0e8", "dark": "#17595e" },
+    "mazda":      { "name": "マツダ",         "short": "マツダ", "origin": "日本", "color": "#ff9ecb", "dark": "#7a4a63" },
+    "mitsubishi": { "name": "三菱",           "short": "三菱",   "origin": "日本", "color": "#ffcf5c", "dark": "#7a5f17" }
+  },
+  "years": {
+    "2021": { "import": 8605,  "toyota": 758,   "nissan": 10846, "honda": 723,  "subaru": 0,    "mazda": 194, "mitsubishi": 13 },
+    "2022": { "import": 14348, "toyota": 618,   "nissan": 16017, "honda": 371,  "subaru": 180,  "mazda": 48,  "mitsubishi": 10 },
+    "2023": { "import": 22848, "toyota": 2546,  "nissan": 17660, "honda": 286,  "subaru": 632,  "mazda": 19,  "mitsubishi": 0 },
+    "2024": { "import": 24057, "toyota": 1789,  "nissan": 7823,  "honda": 147,  "subaru": 229,  "mazda": 12,  "mitsubishi": 0 },
+    "2025": { "import": 30458, "toyota": 4203,  "nissan": 4875,  "honda": 10,   "subaru": 330,  "mazda": 9,   "mitsubishi": 0 },
+    "2026": { "import": 28987, "toyota": 19545, "nissan": 14087, "honda": 3912, "subaru": 2910, "mazda": 0,   "mitsubishi": 0 }
+  },
+  "months": {
+    "2026": [
+      { "m": 1, "import": 2209, "toyota": 1694, "nissan": 1436, "honda": 0,    "subaru": 80,  "mazda": 0, "mitsubishi": 0 },
+      { "m": 2, "import": 2692, "toyota": 2091, "nissan": 1345, "honda": 0,    "subaru": 117, "mazda": 0, "mitsubishi": 0 },
+      { "m": 3, "import": 4777, "toyota": 3456, "nissan": 2629, "honda": 0,    "subaru": 383, "mazda": 0, "mitsubishi": 0 },
+      { "m": 4, "import": 2761, "toyota": 1957, "nissan": 2062, "honda": 0,    "subaru": 157, "mazda": 0, "mitsubishi": 0 },
+      { "m": 5, "import": 3271, "toyota": 2168, "nissan": 1489, "honda": 1736, "subaru": 293, "mazda": 0, "mitsubishi": 0 },
+      { "m": 6, "import": 6051, "toyota": 3115, "nissan": 1603, "honda": 1061, "subaru": 395, "mazda": 0, "mitsubishi": 0 },
+      { "m": 7, "import": 3270, "toyota": 3047, "nissan": 2086, "honda": 730,  "subaru": 929, "mazda": 0, "mitsubishi": 0 },
+      { "m": 8, "import": 3956, "toyota": 2017, "nissan": 1437, "honda": 385,  "subaru": 556, "mazda": 0, "mitsubishi": 0 }
+    ]
+  },
+  "display": {
+    "trendSeries": ["import", "toyota", "nissan", "honda"],
+    "monthlyOrder": ["import", "toyota", "nissan", "honda", "subaru"]
+  }
+}
+  </script>
+
+  <script>
+  "use strict";
+  (function () {
+    var DATA_URL = './ev-registrations.json';
+
+    /* ---------- helpers（元コンポーネントの算出ロジックを移植） ---------- */
+    var el = document.getElementById('app');
+    var fmt = function (n) { return Number(n).toLocaleString('en-US'); };
+    var sum = function (o) { return Object.keys(o).reduce(function (a, k) { return a + o[k]; }, 0); };
+    var pct1 = function (a, b) { return b ? (a / b) * 100 : 0; };
+    var signed = function (v, d) { return (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(v).toFixed(d); };
+    var ratio = function (a, b) { return b ? (a / b).toFixed(1) : '—'; };
+    var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[c]; }); };
+
+    /* 最大剰余法で合計をちょうど100にする */
+    function to100(items) {
+      var t = items.reduce(function (a, i) { return a + i.v; }, 0) || 1;
+      var raw = items.map(function (i) { return Object.assign({}, i, { exact: (i.v / t) * 100 }); });
+      var out = raw.map(function (i) { return Object.assign({}, i, { pct: Math.floor(i.exact) }); });
+      var rest = 100 - out.reduce(function (a, i) { return a + i.pct; }, 0);
+      raw.map(function (i, idx) { return { idx: idx, f: i.exact - Math.floor(i.exact) }; })
+        .sort(function (a, b) { return b.f - a.f; })
+        .forEach(function (r) { if (rest > 0) { out[r.idx].pct += 1; rest -= 1; } });
+      return out;
+    }
+
+    var DATA = null, YRS = [], LATEST = 0, PREV_FULL = 0;
+    var isPartial = function (y) { return !!(DATA && DATA.partial[y]); };
+    var totalOf = function (y) { return sum(DATA.years[y]); };
+    var periodOf = function (yr) { return isPartial(yr) ? yr + '年' + DATA.partial[yr] : yr + '年'; };
+
+    function hydrate(d) {
+      var latestMonthYear = Object.keys(d.months || {}).sort().pop();
+      DATA = {
+        updated: d.meta.updated,
+        trendMax: d.meta.trendMax,
+        sourceDetail: d.meta.sourceDetail,
+        sourceUrl: d.meta.sourceUrl,
+        source: d.meta.source,
+        note: d.meta.note,
+        partial: Object.keys(d.partial || {}).reduce(function (a, y) { a[y] = d.partial[y].label; return a; }, {}),
+        makers: d.makers,
+        years: d.years,
+        trendSeries: d.display.trendSeries,
+        monthlyOrder: d.display.monthlyOrder,
+        monthlyYear: latestMonthYear,
+        months2026: (d.months && d.months[latestMonthYear]) || []
+      };
+      YRS = Object.keys(DATA.years).sort();
+      LATEST = Number(YRS[YRS.length - 1]);
+      PREV_FULL = LATEST - 1;
+    }
+
+    /* ---------- state ---------- */
+    var state = { year: 0, seen: {} };
+
+    /* ==========================================================
+       静的（年に依存しない）セクションの組み立て
+       ========================================================== */
+    function buildShell() {
+      var L = DATA.years[LATEST], P = DATA.years[PREV_FULL];
+      var domLatest = totalOf(LATEST) - L.import;
+      var domPrev = totalOf(PREV_FULL) - P.import;
+
+      /* --- KPIs --- */
+      var kpis = [
+        { label: '登録BEV（' + periodOf(LATEST) + '）', value: totalOf(LATEST), decimals: 0, unit: '台', color: '#eef2f7',
+          sub: PREV_FULL + '年通年の ' + ratio(totalOf(LATEST), totalOf(PREV_FULL)) + '倍' },
+        { label: 'トヨタのBEV', value: L.toyota, decimals: 0, unit: '台', color: '#5aa9ff',
+          sub: PREV_FULL + '年通年の ' + ratio(L.toyota, P.toyota) + '倍' },
+        { label: '輸入車の比率', value: Number(pct1(L.import, totalOf(LATEST)).toFixed(1)), decimals: 1, unit: '%', color: '#e8503a',
+          sub: PREV_FULL + '年は ' + pct1(P.import, totalOf(PREV_FULL)).toFixed(1) + '%' },
+        { label: '国産メーカー計', value: domLatest, decimals: 0, unit: '台', color: '#3ddc97',
+          sub: PREV_FULL + '年通年の ' + ratio(domLatest, domPrev) + '倍' }
+      ];
+      var kpiHtml = kpis.map(function (k) {
+        return '<div data-anim="up" style="opacity:0;background:#0b0f15;padding:24px 22px 20px">'
+          + '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.22em;color:#8b97a8">' + esc(k.label) + '</div>'
+          + '<div style="display:flex;align-items:baseline;gap:6px;margin-top:12px;font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:clamp(34px,4vw,52px);line-height:1;color:' + k.color + '">'
+          + '<span data-count="' + k.value + '" data-decimals="' + k.decimals + '">0</span>'
+          + '<span style="font-size:.42em;font-weight:500;color:#8b97a8">' + esc(k.unit) + '</span></div>'
+          + '<div style="margin-top:10px;font-size:12.5px;color:#6f7c8d">' + esc(k.sub) + '</div></div>';
+      }).join('');
+
+      /* --- ticker --- */
+      var tickerItems = Object.keys(L).filter(function (k) { return L[k] > 0; })
+        .sort(function (a, b) { return L[b] - L[a]; })
+        .map(function (k) { return DATA.makers[k].short + ' ' + fmt(L[k]) + '台'; });
+      tickerItems.push('登録BEV計 ' + fmt(totalOf(LATEST)) + '台');
+      tickerItems.push(LATEST + '年' + (DATA.partial[LATEST] || '') + '累計');
+      var tickerRun = [];
+      for (var r = 0; r < 2; r++) tickerItems.forEach(function (t) { tickerRun.push(t); tickerRun.push('◆'); });
+      var tickerHtml = '<div style="display:flex;overflow:hidden;border-bottom:1px solid #1a212b;background:#0b0f15;padding:13px 0;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)">'
+        + '<div style="display:flex;gap:40px;padding-right:40px;animation:evMarquee 34s linear infinite;font-family:\'Space Grotesk\',sans-serif;font-size:12px;letter-spacing:.26em;color:#55616f;text-transform:uppercase">'
+        + tickerRun.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div></div>';
+
+      /* --- year buttons --- */
+      var yearBtns = YRS.map(function (yr) {
+        return '<button type="button" data-year="' + yr + '" title="' + esc(periodOf(yr))
+          + '" style="padding:9px 15px;border:0;border-radius:999px;cursor:pointer;font-family:\'Space Grotesk\',sans-serif;font-size:13px;transition:all .25s;background:transparent;color:#8b97a8;font-weight:500">'
+          + (isPartial(yr) ? yr + '*' : yr) + '</button>';
+      }).join('');
+
+      /* --- geometry for charts --- */
+      var trendMax = DATA.trendMax;
+      var x = function (i) { return 80 + (760 / Math.max(YRS.length - 1, 1)) * i; };
+      var y = function (v) { return 340 - (v / trendMax) * 280; };
+      var lastIdx = YRS.length - 1;
+      var fullIdx = lastIdx - 1;
+
+      /* milestone grid + labels */
+      var grid = [];
+      for (var v = 0; v <= trendMax; v += 20000) {
+        grid.push({ y: y(v).toFixed(1), top: ((y(v) / 350) * 100).toFixed(2) + '%', label: v === 0 ? '0' : (v / 10000) + '万' });
+      }
+      var xLabels = YRS.map(function (yr, i) {
+        return { x: x(i).toFixed(1), label: yr, left: ((x(i) / 1000) * 100).toFixed(2) + '%',
+          sub: isPartial(yr) ? (DATA.partial[yr] || '') : '', color: isPartial(yr) ? '#c3ccd8' : '#8b97a8' };
+      });
+
+      var ms = (function () {
+        var ref = totalOf(PREV_FULL), now = totalOf(LATEST);
+        var pts = YRS.slice(0, lastIdx).map(function (yr, i) { return x(i).toFixed(1) + ',' + y(totalOf(yr)).toFixed(1); });
+        return {
+          d: 'M' + pts.join(' L'),
+          dPartial: 'M' + x(fullIdx).toFixed(1) + ',' + y(ref).toFixed(1) + ' L' + x(lastIdx).toFixed(1) + ',' + y(now).toFixed(1),
+          cx: x(lastIdx).toFixed(1), cy: y(now).toFixed(1),
+          refY: y(ref).toFixed(1), refTop: ((y(ref) / 350) * 100).toFixed(2) + '%',
+          refLabel: PREV_FULL + '年 通年 ' + fmt(ref) + '台',
+          gapX: x(lastIdx).toFixed(1), gapY1: y(ref).toFixed(1), gapY2: y(now).toFixed(1),
+          gapTop: (((y(ref) + y(now)) / 2 / 350) * 100).toFixed(2) + '%',
+          gapLabel: '+' + fmt(now - ref) + '台',
+          nowTop: ((y(now) / 350) * 100).toFixed(2) + '%', nowLabel: fmt(now) + '台',
+          bandX: x(fullIdx).toFixed(1), bandW: (x(lastIdx) - x(fullIdx)).toFixed(1),
+          bandY: y(now).toFixed(1), bandH: (y(ref) - y(now)).toFixed(1),
+          ratio: ratio(now, ref)
+        };
+      })();
+      var msGapText = fmt(totalOf(LATEST) - totalOf(PREV_FULL)) + '台（'
+        + signed(pct1(totalOf(LATEST) - totalOf(PREV_FULL), totalOf(PREV_FULL)), 0) + '%）';
+
+      var gridLines = grid.map(function (g) { return '<line x1="70" x2="855" y1="' + g.y + '" y2="' + g.y + '"></line>'; }).join('');
+      var gridLabels = grid.map(function (g) { return '<span style="position:absolute;font-size:13px;color:#55616f;white-space:nowrap;transform:translate(-100%,-50%);left:5.6%;top:' + g.top + '">' + g.label + '</span>'; }).join('');
+      var xTicks = xLabels.map(function (t) { return '<line y1="340" y2="348" x1="' + t.x + '" x2="' + t.x + '"></line>'; }).join('');
+      var xLabHtml = xLabels.map(function (t) {
+        return '<span style="position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap;transform:translateX(-50%);top:100%;padding-top:10px;left:' + t.left + '">'
+          + '<span style="font-size:clamp(12px,1.5vw,15px);font-weight:500;color:' + t.color + '">' + t.label + '</span>'
+          + '<span style="font-size:11.5px;color:#55616f">' + esc(t.sub) + '</span></span>';
+      }).join('');
+
+      var milestoneSvg = ''
+        + '<svg viewBox="0 0 1000 350" style="display:block;width:100%;height:auto;overflow:visible" role="img" aria-label="登録BEV合計の推移と前年通年水準の比較">'
+        + '<g stroke="#1a212b" stroke-width="1">' + gridLines + '</g>'
+        + '<line x1="70" x2="855" y1="340.5" y2="340.5" stroke="#394452" stroke-width="1.5"></line>'
+        + '<g stroke="#394452" stroke-width="1.5">' + xTicks + '</g>'
+        + '<rect fill="rgba(198,242,78,.10)" x="' + ms.bandX + '" y="' + ms.bandY + '" width="' + ms.bandW + '" height="' + ms.bandH + '"></rect>'
+        + '<line x1="70" x2="855" stroke="#e8503a" stroke-width="1.5" stroke-dasharray="7 6" y1="' + ms.refY + '" y2="' + ms.refY + '"></line>'
+        + '<line stroke="#c6f24e" stroke-width="2" x1="' + ms.gapX + '" x2="' + ms.gapX + '" y1="' + ms.gapY1 + '" y2="' + ms.gapY2 + '"></line>'
+        + '<path data-anim="draw" fill="none" stroke="#c6f24e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1400" stroke-dashoffset="1400" d="' + ms.d + '"></path>'
+        + '<path data-anim="fade" fill="none" opacity="0" stroke="#c6f24e" stroke-width="5" stroke-linecap="round" stroke-dasharray="9 8" d="' + ms.dPartial + '"></path>'
+        + '<circle data-anim="pop" r="9" opacity="0" fill="#c6f24e" stroke="#07090d" stroke-width="3" cx="' + ms.cx + '" cy="' + ms.cy + '"></circle>'
+        + '</svg>';
+      var milestoneOverlay = ''
+        + '<div style="position:absolute;left:0;right:0;top:8px;bottom:clamp(44px,5vw,56px);pointer-events:none;font-family:\'Space Grotesk\',sans-serif">'
+        + '<span style="position:absolute;left:7%;top:0;font-size:12px;letter-spacing:.2em;color:#55616f">台</span>'
+        + gridLabels
+        + '<span style="position:absolute;left:8%;font-size:12.5px;font-weight:700;white-space:nowrap;color:#e8503a;transform:translateY(-140%);top:' + ms.refTop + '">' + esc(ms.refLabel) + '</span>'
+        + '<span data-anim="fade" style="position:absolute;opacity:0;left:87.5%;font-size:clamp(13px,1.5vw,17px);font-weight:700;white-space:nowrap;color:#c6f24e;transform:translateY(-50%);top:' + ms.nowTop + '">' + esc(ms.nowLabel) + '</span>'
+        + '<span data-anim="fade" style="position:absolute;opacity:0;left:87.5%;font-size:12.5px;font-weight:700;white-space:nowrap;color:#c6f24e;transform:translateY(-50%);top:' + ms.gapTop + '">' + esc(ms.gapLabel) + '</span>'
+        + xLabHtml + '</div>';
+
+      /* --- trend chart --- */
+      var tMax = 40000;
+      var ty = function (v) { return 340 - (v / tMax) * 280; };
+      var tGrid = [];
+      for (var vv = 0; vv <= tMax; vv += 10000) {
+        tGrid.push({ y: ty(vv).toFixed(1), top: ((ty(vv) / 350) * 100).toFixed(2) + '%', label: vv === 0 ? '0' : (vv / 10000) + '万' });
+      }
+      var series = (function () {
+        var raw = DATA.trendSeries.map(function (k) {
+          var isTotal = k === 'total';
+          var val = function (yr) { return isTotal ? totalOf(yr) : DATA.years[yr][k]; };
+          var color = isTotal ? '#c6f24e' : DATA.makers[k].color;
+          var last = val(YRS[lastIdx]);
+          return {
+            name: isTotal ? '登録BEV 合計' : DATA.makers[k].short,
+            color: color, width: isTotal ? 5 : 3.5,
+            d: 'M' + YRS.slice(0, lastIdx).map(function (yr, i) { return x(i).toFixed(1) + ',' + ty(val(yr)).toFixed(1); }).join(' L'),
+            dPartial: 'M' + x(fullIdx).toFixed(1) + ',' + ty(val(YRS[fullIdx])).toFixed(1) + ' L' + x(lastIdx).toFixed(1) + ',' + ty(last).toFixed(1),
+            cx: x(lastIdx).toFixed(1), cy: ty(last).toFixed(1), ly: ty(last) - 20, last: fmt(last)
+          };
+        });
+        var sorted = raw.slice().sort(function (a, b) { return a.ly - b.ly; });
+        var MIN = 30;
+        for (var i = 1; i < sorted.length; i++) { if (sorted[i].ly - sorted[i - 1].ly < MIN) sorted[i].ly = sorted[i - 1].ly + MIN; }
+        raw.forEach(function (s) { s.lTop = ((s.ly / 350) * 100).toFixed(2) + '%'; });
+        return raw;
+      })();
+      var partialX = x(fullIdx + 0.5).toFixed(1);
+
+      var tGridLines = tGrid.map(function (g) { return '<line x1="70" x2="855" y1="' + g.y + '" y2="' + g.y + '"></line>'; }).join('');
+      var tGridLabels = tGrid.map(function (g) { return '<span style="position:absolute;font-size:13px;color:#55616f;white-space:nowrap;transform:translate(-100%,-50%);left:5.6%;top:' + g.top + '">' + g.label + '</span>'; }).join('');
+      var seriesLegend = series.map(function (s) { return '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#c3ccd8"><span style="width:22px;height:3px;background:' + s.color + '"></span>' + esc(s.name) + '</span>'; }).join('');
+      var seriesSolid = series.map(function (s) { return '<path data-anim="draw" stroke-dasharray="1400" stroke-dashoffset="1400" d="' + s.d + '" stroke="' + s.color + '" stroke-width="' + s.width + '"></path>'; }).join('');
+      var seriesPartial = series.map(function (s) { return '<path data-anim="fade" opacity="0" d="' + s.dPartial + '" stroke="' + s.color + '" stroke-width="' + s.width + '"></path>'; }).join('');
+      var seriesDots = series.map(function (s) { return '<circle data-anim="pop" r="7" opacity="0" cx="' + s.cx + '" cy="' + s.cy + '" fill="' + s.color + '"></circle>'; }).join('');
+      var seriesLabels = series.map(function (s) { return '<span data-anim="fade" style="position:absolute;opacity:0;font-size:clamp(12px,1.4vw,15px);font-weight:700;white-space:nowrap;transform:translateY(-50%);left:86.5%;top:' + s.lTop + ';color:' + s.color + '">' + s.last + '</span>'; }).join('');
+
+      var trendSvg = ''
+        + '<svg viewBox="0 0 1000 350" style="display:block;width:100%;height:auto;overflow:visible" role="img" aria-label="登録BEVの推移 2021-2026年8月">'
+        + '<g stroke="#1a212b" stroke-width="1">' + tGridLines + '</g>'
+        + '<line x1="70" x2="855" y1="340.5" y2="340.5" stroke="#394452" stroke-width="1.5"></line>'
+        + '<g stroke="#394452" stroke-width="1.5">' + xTicks + '</g>'
+        + '<line y1="30" y2="348" stroke="#2a3340" stroke-width="1" stroke-dasharray="4 5" x1="' + partialX + '" x2="' + partialX + '"></line>'
+        + '<g fill="none" stroke-linecap="round" stroke-linejoin="round">' + seriesSolid + '</g>'
+        + '<g fill="none" stroke-linecap="round" stroke-dasharray="7 6" opacity=".95">' + seriesPartial + '</g>'
+        + '<g stroke="#090c11" stroke-width="3">' + seriesDots + '</g>'
+        + '</svg>';
+      var trendOverlay = ''
+        + '<div style="position:absolute;left:0;right:0;top:clamp(14px,2vw,26px);bottom:clamp(46px,5vw,58px);pointer-events:none;font-family:\'Space Grotesk\',sans-serif">'
+        + '<span style="position:absolute;left:7%;top:0;font-size:12px;letter-spacing:.2em;color:#55616f">台</span>'
+        + tGridLabels + seriesLabels + xLabHtml + '</div>';
+
+      /* --- monthly --- */
+      var monthlyLead = (function () {
+        var tot = DATA.months2026.map(function (row) { return DATA.monthlyOrder.reduce(function (a, k) { return a + row[k]; }, 0); });
+        var peak = tot.indexOf(Math.max.apply(null, tot));
+        return DATA.monthlyYear + '年1〜' + DATA.months2026.length + '月の登録BEVを月別・主体別に積み上げたもの。'
+          + DATA.months2026[peak].m + '月の ' + fmt(Math.max.apply(null, tot))
+          + '台が最も多く、決算期の3月と半期末の6月が突出する。ホンダは5月から登録が立ち上がった。';
+      })();
+      var monthlyLegend = DATA.monthlyOrder.map(function (k) { return '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#c3ccd8"><span style="width:12px;height:12px;border-radius:2px;background:' + DATA.makers[k].color + '"></span>' + esc(DATA.makers[k].short) + '</span>'; }).join('');
+      var monthlyTicks = [0, 2000, 4000, 6000].map(function (v) {
+        return '<div style="position:absolute;left:0;right:0;display:flex;align-items:center;gap:10px;bottom:' + ((v / 6500) * 100).toFixed(1) + '%">'
+          + '<span style="width:clamp(32px,3.4vw,48px);flex:none;text-align:right;font-family:\'Space Grotesk\',sans-serif;font-size:11px;color:#55616f">' + (v === 0 ? '0' : fmt(v)) + '</span>'
+          + '<span style="flex:1;height:1px;background:#161d26"></span></div>';
+      }).join('');
+      var monthlyBars = (function () {
+        var scaleMax = 6500;
+        var rows = DATA.months2026.map(function (row) { return { r: row, total: DATA.monthlyOrder.reduce(function (a, k) { return a + row[k]; }, 0) }; });
+        var peak = Math.max.apply(null, rows.map(function (i) { return i.total; }));
+        return rows.map(function (i, mi) {
+          var bars = DATA.monthlyOrder.map(function (k, bi) {
+            var m = DATA.makers[k];
+            return '<div title="' + esc(m.short + ' ' + fmt(i.r[k]) + '台（' + i.r.m + '月）') + '" data-grow="Y" style="flex:1;min-width:0;border-radius:2px 2px 0 0;transform-origin:bottom;transform:scaleY(0);background:linear-gradient(180deg,' + m.color + ',' + m.dark + ');height:' + Math.max((i.r[k] / scaleMax) * 100, i.r[k] > 0 ? 0.8 : 0).toFixed(2) + '%;--d:' + (mi * 0.08 + bi * 0.03).toFixed(2) + 's"></div>';
+          }).join('');
+          return { bars: '<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;gap:clamp(2px,.45vw,5px);height:100%">' + bars + '</div>',
+            label: '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span style="font-family:\'Space Grotesk\',sans-serif;font-size:13px;color:#c3ccd8">' + i.r.m + '月</span><span style="font-family:\'Space Grotesk\',sans-serif;font-size:11.5px;color:' + (i.total === peak ? '#c6f24e' : '#6f7c8d') + '">' + fmt(i.total) + '台</span></div>' };
+        });
+      })();
+
+      /* ---------- assemble full HTML ---------- */
+      el.innerHTML = ''
+      /* ===== HERO ===== */
+      + '<section style="position:relative;padding:clamp(28px,5vw,72px) clamp(20px,5vw,80px) clamp(40px,6vw,96px);overflow:hidden;border-bottom:1px solid #1a212b">'
+        + '<div style="position:absolute;top:-220px;right:-160px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(198,242,78,.16),transparent 66%);animation:evGlow 7s ease-in-out infinite;pointer-events:none"></div>'
+        + '<div style="position:absolute;top:40%;left:-180px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(90,169,255,.14),transparent 66%);animation:evGlow 9s ease-in-out infinite 1.5s;pointer-events:none"></div>'
+        + '<div style="position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:14px 20px;font-family:\'Space Grotesk\',sans-serif;font-size:12px;letter-spacing:.28em;color:#8b97a8;text-transform:uppercase">'
+          + '<span style="display:inline-flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:#c6f24e;box-shadow:0 0 12px #c6f24e"></span>Japan BEV Registrations</span>'
+          + '<span>2021 — 2026.8</span>'
+          + '<span style="letter-spacing:.14em;text-transform:none;color:#6f7c8d">出典: 自販連「燃料別登録台数統計」</span>'
+        + '</div>'
+        + '<h1 data-anim="up" style="opacity:0;position:relative;margin:22px 0 0;font-weight:900;font-size:clamp(38px,7.4vw,104px);line-height:.96;letter-spacing:-.03em;text-wrap:balance">電気自動車は<br /><span style="color:#c6f24e">誰が</span>売っているのか</h1>'
+        + '<p data-anim="up" style="opacity:0;position:relative;max-width:56ch;margin:26px 0 0;font-size:clamp(15px,1.5vw,19px);line-height:1.85;color:#a9b5c5;text-wrap:pretty">自販連「燃料別登録台数統計」で、登録乗用車のバッテリーEV（BEV）を追う。2021年から2025年までは輸入車だけが伸び、国産は縮んでいた。ところが2026年に入って様相が変わる。1〜8月の8か月で、すでに2025年通年の1.7倍が登録された。</p>'
+        + '<div data-anim="up" style="opacity:0;position:relative;display:flex;flex-wrap:wrap;gap:10px;margin-top:22px">'
+          + '<div style="display:inline-flex;align-items:flex-start;gap:10px;padding:9px 15px;border:1px solid #1a212b;border-radius:3px;background:#0b0f15;font-size:12.5px;line-height:1.7;color:#8b97a8;max-width:60ch"><span style="flex:none;width:6px;height:6px;margin-top:7px;border-radius:50%;background:#e8503a"></span><span>この統計は<strong style="color:#c3ccd8;font-weight:700">登録車（乗用車）のみ</strong>。軽自動車は含まず、日本メーカーの海外生産車は輸入車に計上される。</span></div>'
+          + '<div style="display:inline-flex;align-items:flex-start;gap:10px;padding:9px 15px;border:1px solid #1a212b;border-radius:3px;background:#0b0f15;font-size:12.5px;line-height:1.7;color:#8b97a8;max-width:60ch"><span style="flex:none;width:6px;height:6px;margin-top:7px;border-radius:50%;background:#c6f24e"></span><span><strong style="color:#c3ccd8;font-weight:700">2026年は1〜8月の累計</strong>（月報8か月分）。通年ではないため、前年との単純比較はできない。</span></div>'
+        + '</div>'
+        + '<div style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;margin-top:clamp(36px,5vw,64px);background:#1a212b;border:1px solid #1a212b;border-radius:4px;overflow:hidden">' + kpiHtml + '</div>'
+      + '</section>'
+      /* ===== TICKER ===== */
+      + tickerHtml
+      /* ===== 01 RANKING ===== */
+      + '<section style="padding:clamp(48px,6vw,104px) clamp(20px,5vw,80px);border-bottom:1px solid #1a212b">'
+        + '<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px">'
+          + '<div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.26em;color:#c6f24e">01 — RANKING</div>'
+          + '<h2 data-anim="up" style="opacity:0;margin:14px 0 0;font-weight:900;font-size:clamp(26px,3.6vw,46px);line-height:1.15;letter-spacing:-.02em">登録BEVの内訳（2021→2026.8）</h2>'
+          + '<p style="margin:12px 0 0;max-width:46ch;font-size:14px;line-height:1.8;color:#8b97a8">年を切り替えると順位が入れ替わる。単位は台。輸入車はブランド別の内訳が公表されていないため合計値。</p></div>'
+          + '<div id="yearBtns" style="display:flex;gap:6px;padding:5px;background:#0e1218;border:1px solid #1a212b;border-radius:999px">' + yearBtns + '</div>'
+        + '</div>'
+        + '<div id="rankBars" data-sec="rank" style="display:grid;gap:10px;margin-top:clamp(32px,4vw,52px)"></div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:26px;font-size:12.5px;color:#55616f"><span id="yearTotalLine"></span><span>スズキ・ダイハツはこの期間にEVの登録なし。</span></div>'
+      + '</section>'
+      /* ===== 02 MILESTONE ===== */
+      + '<section style="position:relative;padding:clamp(52px,7vw,116px) clamp(20px,5vw,80px);border-bottom:1px solid #1a212b;overflow:hidden">'
+        + '<div style="position:absolute;top:-180px;left:50%;width:720px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(198,242,78,.10),transparent 68%);pointer-events:none"></div>'
+        + '<div style="position:relative;font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.26em;color:#c6f24e">02 — MILESTONE</div>'
+        + '<h2 data-anim="up" style="opacity:0;position:relative;margin:16px 0 0;font-weight:900;font-size:clamp(30px,5vw,68px);line-height:1.06;letter-spacing:-.03em;max-width:20ch;text-wrap:balance">まだ8月なのに、<br /><span style="color:#c6f24e">昨年を超えた</span></h2>'
+        + '<p data-anim="up" style="opacity:0;position:relative;max-width:50ch;margin:20px 0 0;font-size:clamp(14px,1.4vw,17px);line-height:1.85;color:#a9b5c5">登録BEVの年間合計は2023年の43,991台をピークに落ち込み、2025年は39,885台だった。2026年は8月末の時点で69,441台。通年を待たずに、前年の水準をすでに' + esc(msGapText) + '上回っている。</p>'
+        + '<div style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(24px,4vw,56px);align-items:end;margin-top:clamp(36px,5vw,64px)">'
+          + '<div style="position:relative;padding:8px 0 clamp(44px,5vw,56px)">' + milestoneSvg + milestoneOverlay + '</div>'
+          + '<div style="display:flex;flex-direction:column;gap:22px;padding-bottom:clamp(44px,5vw,56px);min-width:160px">'
+            + '<div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.22em;color:#8b97a8">8月末 / 2025年通年</div><div style="display:flex;align-items:baseline;gap:5px;margin-top:8px;font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:clamp(40px,5vw,64px);line-height:1;color:#c6f24e">' + ms.ratio + '<span style="font-size:.38em;font-weight:500;color:#8b97a8">倍</span></div></div>'
+            + '<div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.22em;color:#8b97a8">超過分</div><div style="margin-top:8px;font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:clamp(22px,2.4vw,32px);line-height:1;color:#eef2f7">' + ms.gapLabel + '</div><div style="margin-top:8px;font-size:12.5px;line-height:1.7;color:#6f7c8d;max-width:20ch">残り4か月を残しての到達点。</div></div>'
+          + '</div>'
+        + '</div>'
+      + '</section>'
+      /* ===== 03 TREND ===== */
+      + '<section style="padding:clamp(48px,6vw,104px) clamp(20px,5vw,80px);border-bottom:1px solid #1a212b;background:#090c11">'
+        + '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.26em;color:#c6f24e">03 — TREND</div>'
+        + '<h2 data-anim="up" style="opacity:0;margin:14px 0 0;font-weight:900;font-size:clamp(26px,3.6vw,46px);line-height:1.15;letter-spacing:-.02em">2026年、国産が押し返した</h2>'
+        + '<p style="margin:12px 0 0;max-width:52ch;font-size:14px;line-height:1.8;color:#8b97a8">2025年まで登録BEVは4万台前後で頭打ちだった。2026年に入り、トヨタが8か月で19,545台、日産が14,087台、ホンダが3,912台を登録。輸入車は増え続けているが、2026年は国産3社の立ち上がりがそれを上回る。破線は1〜8月までの途中値。</p>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:28px">' + seriesLegend + '</div>'
+        + '<div style="position:relative;margin-top:22px;padding:clamp(14px,2vw,26px) 0 clamp(46px,5vw,58px)">' + trendSvg + trendOverlay + '</div>'
+      + '</section>'
+      /* ===== 04 SHARE ===== */
+      + '<section style="padding:clamp(48px,6vw,104px) clamp(20px,5vw,80px);border-bottom:1px solid #1a212b">'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(32px,5vw,72px);align-items:start">'
+          + '<div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.26em;color:#c6f24e">04 — SHARE</div>'
+          + '<h2 data-anim="up" style="opacity:0;margin:14px 0 0;font-weight:900;font-size:clamp(26px,3.6vw,46px);line-height:1.15;letter-spacing:-.02em">100台のうち、誰の車か</h2>'
+          + '<p id="shareLead" style="margin:14px 0 0;max-width:40ch;font-size:14px;line-height:1.85;color:#8b97a8"></p>'
+          + '<div id="shareLegend" style="display:grid;gap:9px;margin-top:30px"></div></div>'
+          + '<div id="waffle" data-sec="share" style="display:grid;grid-template-columns:repeat(10,1fr);gap:clamp(4px,.7vw,8px);max-width:520px;justify-self:center;width:100%"></div>'
+        + '</div>'
+      + '</section>'
+      /* ===== 05 IMPORTS + 06 DOMESTIC ===== */
+      + '<section style="padding:clamp(48px,6vw,104px) clamp(20px,5vw,80px);border-bottom:1px solid #1a212b;background:#090c11">'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:clamp(36px,5vw,72px)">'
+          + '<div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.26em;color:#c6f24e">05 — IMPORTS</div>'
+          + '<h2 data-anim="up" style="opacity:0;margin:14px 0 0;font-weight:900;font-size:clamp(24px,3.2vw,40px);line-height:1.15;letter-spacing:-.02em">76%まで上がって、また4割へ</h2>'
+          + '<p style="margin:12px 0 0;max-width:40ch;font-size:14px;line-height:1.8;color:#8b97a8">登録BEVに占める輸入車の比率。2025年に76%まで上がったが、2026年は国産の投入で42%まで戻した。日本メーカーの海外生産車もここに含まれる。</p>'
+          + '<div id="importBars" data-sec="imports" style="display:flex;align-items:flex-end;gap:clamp(8px,1.6vw,18px);height:240px;margin-top:36px"></div></div>'
+          + '<div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.26em;color:#c6f24e">06 — DOMESTIC</div>'
+          + '<h2 id="domesticTitle" data-anim="up" style="opacity:0;margin:14px 0 0;font-weight:900;font-size:clamp(24px,3.2vw,40px);line-height:1.15;letter-spacing:-.02em"></h2>'
+          + '<p id="domesticLead" style="margin:12px 0 0;max-width:40ch;font-size:14px;line-height:1.8;color:#8b97a8"></p>'
+          + '<div id="domesticList" style="display:grid;gap:1px;margin-top:36px;background:#1a212b;border:1px solid #1a212b;border-radius:4px;overflow:hidden"></div></div>'
+        + '</div>'
+      + '</section>'
+      /* ===== 07 MONTHLY ===== */
+      + '<section style="padding:clamp(48px,6vw,104px) clamp(20px,5vw,80px);border-bottom:1px solid #1a212b">'
+        + '<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px">'
+          + '<div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.26em;color:#c6f24e">07 — MONTHLY</div>'
+          + '<h2 data-anim="up" style="opacity:0;margin:14px 0 0;font-weight:900;font-size:clamp(26px,3.6vw,46px);line-height:1.15;letter-spacing:-.02em">2026年の月別内訳</h2>'
+          + '<p style="margin:12px 0 0;max-width:52ch;font-size:14px;line-height:1.8;color:#8b97a8">' + esc(monthlyLead) + '</p></div>'
+          + '<div style="display:flex;flex-wrap:wrap;gap:10px 18px">' + monthlyLegend + '</div>'
+        + '</div>'
+        + '<div style="position:relative;margin-top:clamp(32px,4vw,52px);padding-left:clamp(40px,4vw,56px)">'
+          + '<div style="position:absolute;left:0;right:0;top:0;height:clamp(230px,27vw,340px);pointer-events:none">' + monthlyTicks + '</div>'
+          + '<div data-sec="monthly" style="position:relative;display:flex;align-items:flex-end;gap:clamp(10px,2.2vw,30px);height:clamp(230px,27vw,340px)">' + monthlyBars.map(function (m) { return m.bars; }).join('') + '</div>'
+          + '<div style="display:flex;gap:clamp(10px,2.2vw,30px);margin-top:14px;padding-left:clamp(42px,3.4vw,58px)">' + monthlyBars.map(function (m) { return m.label; }).join('') + '</div>'
+        + '</div>'
+      + '</section>'
+      /* ===== FOOTER ===== */
+      + '<footer style="padding:clamp(40px,5vw,72px) clamp(20px,5vw,80px) clamp(52px,6vw,88px)">'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px 48px;align-items:start">'
+          + '<div style="font-weight:900;font-size:clamp(20px,2.4vw,30px);line-height:1.4;letter-spacing:-.01em;max-width:24ch">勢力図は、<span style="color:#c6f24e">まだ固まっていない</span>。</div>'
+          + '<div style="font-size:12.5px;line-height:2;color:#6f7c8d">'
+            + '<div style="font-family:\'Space Grotesk\',sans-serif;letter-spacing:.2em;color:#8b97a8">NOTES</div><span>' + esc(DATA.note) + '</span>'
+            + '<div style="margin-top:14px;font-family:\'Space Grotesk\',sans-serif;letter-spacing:.2em;color:#8b97a8">SOURCE</div><a href="' + esc(DATA.sourceUrl || 'https://www.jada.or.jp/pages/342/') + '" target="_blank" rel="noopener">' + esc(DATA.source || '一般社団法人日本自動車販売協会連合会「燃料別登録台数」') + '</a> <span>' + esc(DATA.sourceDetail || '') + '</span>'
+            + '<div style="margin-top:14px;font-family:\'Space Grotesk\',sans-serif;letter-spacing:.2em;color:#8b97a8">UPDATED</div><span>' + esc(DATA.updated) + '</span>'
+          + '</div>'
+        + '</div>'
+      + '</footer>';
+
+      /* wire up year buttons */
+      var btnWrap = document.getElementById('yearBtns');
+      btnWrap.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-year]');
+        if (!b) return;
+        setYear(Number(b.getAttribute('data-year')));
+      });
+    }
+
+    /* ==========================================================
+       年に依存するセクションの（再）描画
+       ========================================================== */
+    function renderYear() {
+      var year = state.year;
+      var data = DATA.years[year];
+      var total = totalOf(year);
+      var prev = DATA.years[year - 1] ? totalOf(year - 1) : null;
+      var order = Object.keys(data).sort(function (a, b) { return data[b] - data[a]; });
+      var max = data[order[0]] || 1;
+      var seen = state.seen;
+      var play = function (k) { return seen[k] ? 'running' : 'paused'; };
+
+      /* year buttons active state */
+      Array.prototype.forEach.call(document.querySelectorAll('#yearBtns button[data-year]'), function (b) {
+        var on = Number(b.getAttribute('data-year')) === year;
+        b.style.background = on ? '#c6f24e' : 'transparent';
+        b.style.color = on ? '#07090d' : '#8b97a8';
+        b.style.fontWeight = on ? '700' : '500';
+      });
+
+      /* --- ranking bars --- */
+      document.getElementById('rankBars').innerHTML = order.map(function (k, i) {
+        var m = DATA.makers[k];
+        var w = Math.max((data[k] / max) * 100, data[k] > 0 ? 1.2 : 0).toFixed(1) + '%';
+        return '<div style="display:grid;grid-template-columns:minmax(96px,148px) 1fr;align-items:center;gap:clamp(12px,2vw,24px)">'
+          + '<div style="display:flex;flex-direction:column;gap:3px;text-align:right"><span style="font-weight:700;font-size:clamp(13px,1.4vw,16px)">' + esc(m.name) + '</span><span style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.1em;color:#6f7c8d">' + esc(m.origin) + ' · ' + (i + 1) + '位</span></div>'
+          + '<div style="display:flex;align-items:center;gap:14px;min-width:0">'
+            + '<div style="flex:1;height:clamp(26px,3.2vw,40px);background:#0e1218;border-radius:2px;overflow:hidden">'
+              + '<div style="height:100%;border-radius:2px;transform-origin:left;animation:evGrowX .95s cubic-bezier(.22,1,.36,1) both;transition:width .85s cubic-bezier(.22,1,.36,1);background:linear-gradient(90deg,' + m.dark + ',' + m.color + ');width:' + w + ';animation-delay:' + (i * 0.06).toFixed(2) + 's;animation-play-state:' + play('rank') + '"></div>'
+            + '</div>'
+            + '<span style="min-width:76px;font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,22px);color:' + m.color + '">' + fmt(data[k]) + '</span>'
+          + '</div></div>';
+      }).join('');
+
+      /* --- year total line --- */
+      document.getElementById('yearTotalLine').textContent = periodOf(year) + ' 登録BEV合計 ' + fmt(total) + '台'
+        + (isPartial(year) ? '（' + (year - 1) + '年通年の ' + ratio(total, prev) + '倍）'
+           : prev ? '（前年比 ' + signed(pct1(total - prev, prev), 1) + '%）' : '');
+
+      /* --- share waffle + legend --- */
+      var shareItems = to100(order.map(function (k) { return { v: data[k], name: DATA.makers[k].short, color: DATA.makers[k].color }; }))
+        .filter(function (i) { return i.pct > 0; });
+      document.getElementById('shareLead').textContent = periodOf(year) + 'に登録された乗用車BEV100台の内訳。'
+        + (isPartial(year) ? 'トヨタと日産だけで半分近くを占める。'
+           : year >= 2024 ? '輸入車だけで4分の3を超える。'
+           : '当時は日産が最大勢力だった。');
+      document.getElementById('shareLegend').innerHTML = shareItems.map(function (s) {
+        return '<div style="display:flex;align-items:center;gap:12px;font-size:13.5px"><span style="width:12px;height:12px;border-radius:2px;background:' + s.color + '"></span><span style="flex:1;color:#c3ccd8">' + esc(s.name) + '</span><span style="font-family:\'Space Grotesk\',sans-serif;font-weight:700">' + s.pct + '%</span></div>';
+      }).join('');
+      var waffle = [];
+      shareItems.forEach(function (s) { for (var i = 0; i < s.pct; i++) waffle.push(s); });
+      document.getElementById('waffle').innerHTML = waffle.map(function (c, i) {
+        return '<div title="' + esc(c.name + ' ' + c.pct + '%') + '" style="aspect-ratio:1;border-radius:2px;opacity:0;animation:evPop .55s cubic-bezier(.34,1.56,.64,1) both;background:' + c.color + ';animation-delay:' + (i * 0.014).toFixed(3) + 's;animation-play-state:' + play('share') + '"></div>';
+      }).join('');
+
+      /* --- imports bars --- */
+      document.getElementById('importBars').innerHTML = YRS.map(function (yr, i) {
+        var p = pct1(DATA.years[yr].import, totalOf(yr));
+        var on = Number(yr) === year;
+        var color = on ? '#e8503a' : '#6f7c8d';
+        return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;height:100%;justify-content:flex-end">'
+          + '<span style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:clamp(14px,1.8vw,21px);color:' + color + '">' + p.toFixed(0) + '%</span>'
+          + '<div style="width:100%;border-radius:2px;transform-origin:bottom;animation:evGrowY .95s cubic-bezier(.22,1,.36,1) both;background:linear-gradient(180deg,' + color + ',' + color + '33);height:' + Math.max(p, 1).toFixed(1) + '%;animation-delay:' + (i * 0.07).toFixed(2) + 's;animation-play-state:' + play('imports') + '"></div>'
+          + '<span style="font-family:\'Space Grotesk\',sans-serif;font-size:12px;color:#8b97a8">' + (isPartial(yr) ? yr + '*' : yr) + '</span></div>';
+      }).join('');
+
+      /* --- domestic list --- */
+      var L = DATA.years[LATEST];
+      var domLatest = totalOf(LATEST) - L.import;
+      document.getElementById('domesticTitle').textContent = '国産メーカーの内訳（' + periodOf(year) + '）';
+      document.getElementById('domesticLead').textContent = '輸入車を除いた国産6社。' + periodOf(LATEST) + 'の合計は ' + fmt(domLatest) + '台で、輸入車を上回った。右の数字は前年（2026年は2025年通年）からの増減。';
+      var domesticKeys = Object.keys(data).filter(function (k) { return k !== 'import'; }).sort(function (a, b) { return data[b] - data[a]; });
+      document.getElementById('domesticList').innerHTML = domesticKeys.map(function (k, i) {
+        var p = DATA.years[year - 1] ? DATA.years[year - 1][k] : null;
+        return '<div data-anim="up" style="opacity:0;display:grid;grid-template-columns:34px 1fr auto auto;align-items:center;gap:14px;padding:16px 18px;background:#0b0f15">'
+          + '<span style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:18px;color:' + (i === 0 ? '#c6f24e' : '#6f7c8d') + '">' + String(i + 1).padStart(2, '0') + '</span>'
+          + '<span style="font-size:14.5px">' + esc(DATA.makers[k].name) + '</span>'
+          + '<span style="font-family:\'Space Grotesk\',sans-serif;font-size:12px;color:#55616f;min-width:60px;text-align:right">' + (p == null ? '—' : signed(data[k] - p, 0)) + '</span>'
+          + '<span style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:17px;min-width:56px;text-align:right">' + fmt(data[k]) + '</span></div>';
+      }).join('');
+
+      /* newly injected data-anim nodes need observing */
+      observeNewAnims();
+    }
+
+    function setYear(yr) {
+      if (yr === state.year) return;
+      state.year = yr;
+      renderYear();
+    }
+
+    /* ==========================================================
+       アニメーション（IntersectionObserver）
+       ========================================================== */
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var idxCounter = {};
+    var animIO, secIO;
+
+    function countUp(node) {
+      var to = parseFloat(node.getAttribute('data-count'));
+      var dec = parseInt(node.getAttribute('data-decimals') || '0', 10);
+      var out = function (v) { return dec > 0 ? v.toFixed(dec) : fmt(Math.round(v)); };
+      if (reduce) { node.textContent = out(to); return; }
+      var t0 = performance.now();
+      (function step(t) {
+        var p = Math.min((t - t0) / 1500, 1), e = 1 - Math.pow(1 - p, 3);
+        node.textContent = out(to * e);
+        if (p < 1) requestAnimationFrame(step);
+      })(performance.now());
+    }
+
+    function playAnim(node) {
+      if (node.dataset.played) return;
+      node.dataset.played = '1';
+      if (node.hasAttribute('data-count')) return countUp(node);
+      if (node.hasAttribute('data-grow')) {
+        if (reduce) { node.style.transform = 'none'; return; }
+        node.style.animation = 'evGrowY .8s cubic-bezier(.22,1,.36,1) var(--d,0s) both';
+        return;
+      }
+      var kind = node.getAttribute('data-anim');
+      if (reduce) { node.style.opacity = 1; node.style.transform = 'none'; node.style.strokeDashoffset = 0; return; }
+      var i = idxCounter[kind] || 0; idxCounter[kind] = i + 1;
+      var d = Math.min(i * 0.045, 0.9);
+      if (kind === 'up') node.style.animation = 'evFadeUp .85s cubic-bezier(.22,1,.36,1) ' + d + 's both';
+      else if (kind === 'fade') node.style.animation = 'evFade .9s ease 1.1s both';
+      else if (kind === 'pop') node.style.animation = 'evPop .55s cubic-bezier(.34,1.56,.64,1) ' + (d + 0.1) + 's both';
+      else if (kind === 'draw') node.style.animation = 'evDraw 1.7s ease-out ' + d + 's both';
+    }
+
+    function observeNewAnims() {
+      if (!animIO) return;
+      Array.prototype.forEach.call(el.querySelectorAll('[data-anim]:not([data-played]),[data-grow]:not([data-played]),[data-count]:not([data-played])'), function (n) {
+        if (reduce) { playAnim(n); } else { animIO.observe(n); }
+      });
+    }
+
+    function initAnim() {
+      var secs = Array.prototype.slice.call(el.querySelectorAll('[data-sec]'));
+      if (reduce) {
+        var all = {}; secs.forEach(function (s) { all[s.getAttribute('data-sec')] = true; });
+        state.seen = all;
+        Array.prototype.forEach.call(el.querySelectorAll('[data-anim],[data-grow],[data-count]'), playAnim);
+        renderYear();
+        return;
+      }
+      /* section-level "seen" flags drive bar/waffle play-state on re-render */
+      secIO = new IntersectionObserver(function (entries) {
+        var hit = entries.filter(function (e) { return e.isIntersecting; }).map(function (e) { return e.target.getAttribute('data-sec'); });
+        if (!hit.length) return;
+        entries.forEach(function (e) { if (e.isIntersecting) secIO.unobserve(e.target); });
+        hit.forEach(function (k) { state.seen[k] = true; });
+        /* flip any already-rendered paused elements to running */
+        Array.prototype.forEach.call(el.querySelectorAll('[style*="animation-play-state:paused"]'), function (n) {
+          n.style.animationPlayState = 'running';
+        });
+      }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
+      secs.forEach(function (s) { secIO.observe(s); });
+
+      animIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting) { playAnim(en.target); animIO.unobserve(en.target); } });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+      observeNewAnims();
+
+      /* safety net for environments where IO never fires */
+      setTimeout(function () {
+        Array.prototype.forEach.call(el.querySelectorAll('[data-anim]:not([data-played]),[data-grow]:not([data-played]),[data-count]:not([data-played])'), function (n) {
+          var r = n.getBoundingClientRect();
+          if (r.top < window.innerHeight && r.bottom > 0) playAnim(n);
+        });
+      }, 1800);
+    }
+
+    /* ==========================================================
+       起動：外部JSONを取りにいき、失敗したら埋め込みへフォールバック
+       ========================================================== */
+    function start(d) {
+      hydrate(d);
+      state.year = LATEST;
+      buildShell();
+      renderYear();
+      document.getElementById('boot').classList.add('hide');
+      requestAnimationFrame(initAnim);
+    }
+
+    function fromFallback(reason) {
+      try {
+        var raw = document.getElementById('ev-data-fallback').textContent.trim();
+        if (!raw || raw.indexOf('__EV_DATA') === 0) throw new Error('no embedded data');
+        start(JSON.parse(raw));
+      } catch (e) {
+        var boot = document.getElementById('boot');
+        boot.innerHTML = '<div style="max-width:60ch;text-align:center;line-height:1.9;letter-spacing:normal">'
+          + 'データの読み込みに失敗しました（' + esc(reason) + '）。<br>'
+          + 'ev-registrations.json が index.html と同じ場所にあるか確認してください。'
+          + 'ローカルで確認する場合はHTTPサーバー越しに開く必要があります（file:// では読み込めません）。</div>';
+      }
+    }
+
+    fetch(DATA_URL + '?v=' + Date.now())
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(start)
+      .catch(function (e) { fromFallback(e.message || 'fetch error'); });
+  })();
+  </script>
+</body>
+</html>

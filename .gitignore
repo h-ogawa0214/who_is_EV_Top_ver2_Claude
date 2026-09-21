@@ -1,0 +1,4 @@
+# パイプラインの生成物・キャッシュ（コミットしない）
+.cache/
+pr-body.md
+scripts/node_modules/

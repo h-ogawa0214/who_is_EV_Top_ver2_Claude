@@ -1,0 +1,68 @@
+name: Update EV data (JADA)
+
+# 自販連の月報公表は翌月上旬で日付が数日ぶれるため、月2回走らせて取りこぼしを防ぐ。
+# 変更があればPRを作るだけで、本番へは無人反映しない（人がPRで承認 → 既存デプロイが走る）。
+on:
+  schedule:
+    - cron: '0 0 8,12 * *'   # 毎月8日・12日 00:00 UTC（= JST 09:00）
+  workflow_dispatch:
+    inputs:
+      month:
+        description: '取得する月（空なら公表済みの最新月）'
+        required: false
+      annual:
+        description: '年次確定値を取り込む年（例: 2025）。指定時は月報より優先'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: jada-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: パイプラインの依存を導入（docs/ には混入しない）
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+
+      - name: 取得 → マージ → 検証（差分がなければ changed=false）
+        id: update
+        env:
+          # 取得時のUser-Agentに入れる連絡先。Settings → Variables に JADA_CONTACT を設定推奨。
+          JADA_CONTACT: ${{ vars.JADA_CONTACT }}
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.month }}" ];  then ARGS="--month=${{ github.event.inputs.month }}"; fi
+          if [ -n "${{ github.event.inputs.annual }}" ]; then ARGS="--annual=${{ github.event.inputs.annual }}"; fi
+          # cwd はリポジトリ直下。scripts/node_modules の tsx を使う。
+          ./scripts/node_modules/.bin/tsx scripts/update-data.ts $ARGS \
+            --data=ev-registrations.json --pr-body=pr-body.md
+
+      - name: docs/ の配信コピーを同期
+        if: steps.update.outputs.changed == 'true'
+        run: ./scripts/node_modules/.bin/tsx scripts/sync-docs.ts
+
+      - name: Pull Request を作成
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: ${{ steps.update.outputs.branch }}
+          title: ${{ steps.update.outputs.pr_title }}
+          body-path: pr-body.md
+          commit-message: ${{ steps.update.outputs.pr_title }}
+          # data ファイルだけをコミット（pr-body.md や .cache/ は含めない）
+          add-paths: |
+            ev-registrations.json
+            docs/ev-registrations.json
+          labels: ${{ steps.update.outputs.has_warnings == 'true' && 'data-update,needs-review' || 'data-update' }}

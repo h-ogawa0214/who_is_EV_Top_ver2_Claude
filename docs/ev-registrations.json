@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "updated": "2026-09-21",
+    "unit": "台",
+    "trendMax": 80000,
+    "source": "一般社団法人日本自動車販売協会連合会「燃料別登録台数」",
+    "sourceUrl": "https://www.jada.or.jp/pages/342/",
+    "sourceDetail": "（年別統計 2021年〜2025年／燃料別メーカー別登録台数 月報 2026年1月〜8月）",
+    "note": "自販連『燃料別登録台数統計』より、乗用車のEV（BEV）を集計。登録車（乗用車）のみで軽自動車は含まない。日本メーカーの海外生産車は輸入車に計上される。PHV・HV・FCVは含まない。輸入車はブランド別の内訳が公表されていないため合計値。2026年は月報1月〜8月の累計で、通年値ではない。スズキ・ダイハツは同期間にEVの登録がないため掲載していない。"
+  },
+  "partial": {
+    "2026": { "throughMonth": 8, "label": "1〜8月" }
+  },
+  "makers": {
+    "import":     { "name": "輸入車（合計）", "short": "輸入車", "origin": "海外", "color": "#e8503a", "dark": "#7a2418" },
+    "toyota":     { "name": "トヨタ",         "short": "トヨタ", "origin": "日本", "color": "#5aa9ff", "dark": "#1f4d80" },
+    "nissan":     { "name": "日産",           "short": "日産",   "origin": "日本", "color": "#3ddc97", "dark": "#1c6b4c" },
+    "honda":      { "name": "ホンダ",         "short": "ホンダ", "origin": "日本", "color": "#a78bfa", "dark": "#4c3a86" },
+    "subaru":     { "name": "SUBARU",        "short": "SUBARU", "origin": "日本", "color": "#58e0e8", "dark": "#17595e" },
+    "mazda":      { "name": "マツダ",         "short": "マツダ", "origin": "日本", "color": "#ff9ecb", "dark": "#7a4a63" },
+    "mitsubishi": { "name": "三菱",           "short": "三菱",   "origin": "日本", "color": "#ffcf5c", "dark": "#7a5f17" }
+  },
+  "years": {
+    "2021": { "import": 8605,  "toyota": 758,   "nissan": 10846, "honda": 723,  "subaru": 0,    "mazda": 194, "mitsubishi": 13 },
+    "2022": { "import": 14348, "toyota": 618,   "nissan": 16017, "honda": 371,  "subaru": 180,  "mazda": 48,  "mitsubishi": 10 },
+    "2023": { "import": 22848, "toyota": 2546,  "nissan": 17660, "honda": 286,  "subaru": 632,  "mazda": 19,  "mitsubishi": 0 },
+    "2024": { "import": 24057, "toyota": 1789,  "nissan": 7823,  "honda": 147,  "subaru": 229,  "mazda": 12,  "mitsubishi": 0 },
+    "2025": { "import": 30458, "toyota": 4203,  "nissan": 4875,  "honda": 10,   "subaru": 330,  "mazda": 9,   "mitsubishi": 0 },
+    "2026": { "import": 28987, "toyota": 19545, "nissan": 14087, "honda": 3912, "subaru": 2910, "mazda": 0,   "mitsubishi": 0 }
+  },
+  "months": {
+    "2026": [
+      { "m": 1, "import": 2209, "toyota": 1694, "nissan": 1436, "honda": 0,    "subaru": 80,  "mazda": 0, "mitsubishi": 0 },
+      { "m": 2, "import": 2692, "toyota": 2091, "nissan": 1345, "honda": 0,    "subaru": 117, "mazda": 0, "mitsubishi": 0 },
+      { "m": 3, "import": 4777, "toyota": 3456, "nissan": 2629, "honda": 0,    "subaru": 383, "mazda": 0, "mitsubishi": 0 },
+      { "m": 4, "import": 2761, "toyota": 1957, "nissan": 2062, "honda": 0,    "subaru": 157, "mazda": 0, "mitsubishi": 0 },
+      { "m": 5, "import": 3271, "toyota": 2168, "nissan": 1489, "honda": 1736, "subaru": 293, "mazda": 0, "mitsubishi": 0 },
+      { "m": 6, "import": 6051, "toyota": 3115, "nissan": 1603, "honda": 1061, "subaru": 395, "mazda": 0, "mitsubishi": 0 },
+      { "m": 7, "import": 3270, "toyota": 3047, "nissan": 2086, "honda": 730,  "subaru": 929, "mazda": 0, "mitsubishi": 0 },
+      { "m": 8, "import": 3956, "toyota": 2017, "nissan": 1437, "honda": 385,  "subaru": 556, "mazda": 0, "mitsubishi": 0 }
+    ]
+  },
+  "display": {
+    "trendSeries": ["import", "toyota", "nissan", "honda"],
+    "monthlyOrder": ["import", "toyota", "nissan", "honda", "subaru"]
+  }
+}

@@ -1,0 +1,29 @@
+name: Validate EV data
+
+# PRのたびにJSONの不変条件を検査する（手動編集も対象）。
+# canonical と docs/ の配信コピーの不一致もここで弾く（SPEC 6.3）。
+on:
+  pull_request:
+    paths:
+      - 'ev-registrations.json'
+      - 'docs/ev-registrations.json'
+      - 'scripts/**'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 依存を導入
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+      - name: 不変条件を検査
+        run: ./scripts/node_modules/.bin/tsx scripts/validate.ts ev-registrations.json
+      - name: 単体テスト
+        run: ./scripts/node_modules/.bin/tsx scripts/test/run.ts
+      - name: canonical と docs/ の一致を検査
+        run: ./scripts/node_modules/.bin/tsx scripts/sync-docs.ts --check

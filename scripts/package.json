@@ -1,0 +1,15 @@
+{
+  "name": "who-is-ev-top-pipeline",
+  "private": true,
+  "type": "module",
+  "description": "半自動更新パイプライン（自販連版）。docs/ の配信物には含めない。",
+  "scripts": {
+    "fetch:update": "tsx update-data.ts",
+    "validate": "tsx validate.ts ../ev-registrations.json",
+    "sync": "tsx sync-docs.ts",
+    "inspect": "tsx inspect.ts --page",
+    "test": "tsx test/run.ts"
+  },
+  "dependencies": { "xlsx": "^0.18.5" },
+  "devDependencies": { "tsx": "^4.20.0", "typescript": "^5.5.0", "@types/node": "^20.0.0" }
+}
