@@ -490,7 +490,7 @@
           + '<div style="display:flex;flex-direction:column;gap:3px;text-align:right"><span style="font-weight:700;font-size:clamp(13px,1.4vw,16px)">' + esc(m.name) + '</span><span style="font-family:\'Space Grotesk\',sans-serif;font-size:11px;letter-spacing:.1em;color:#6f7c8d">' + esc(m.origin) + ' · ' + (i + 1) + '位</span></div>'
           + '<div style="display:flex;align-items:center;gap:14px;min-width:0">'
             + '<div style="flex:1;height:clamp(26px,3.2vw,40px);background:#0e1218;border-radius:2px;overflow:hidden">'
-              + '<div style="height:100%;border-radius:2px;transform-origin:left;animation:evGrowX .95s cubic-bezier(.22,1,.36,1) both;transition:width .85s cubic-bezier(.22,1,.36,1);background:linear-gradient(90deg,' + m.dark + ',' + m.color + ');width:' + w + ';animation-delay:' + (i * 0.06).toFixed(2) + 's;animation-play-state:' + play('rank') + '"></div>'
+              + '<div data-play="rank" style="height:100%;border-radius:2px;transform-origin:left;animation:evGrowX .95s cubic-bezier(.22,1,.36,1) both;transition:width .85s cubic-bezier(.22,1,.36,1);background:linear-gradient(90deg,' + m.dark + ',' + m.color + ');width:' + w + ';animation-delay:' + (i * 0.06).toFixed(2) + 's;animation-play-state:' + play('rank') + '"></div>'
             + '</div>'
             + '<span style="min-width:76px;font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:clamp(15px,1.8vw,22px);color:' + m.color + '">' + fmt(data[k]) + '</span>'
           + '</div></div>';
@@ -514,7 +514,7 @@
       var waffle = [];
       shareItems.forEach(function (s) { for (var i = 0; i < s.pct; i++) waffle.push(s); });
       document.getElementById('waffle').innerHTML = waffle.map(function (c, i) {
-        return '<div title="' + esc(c.name + ' ' + c.pct + '%') + '" style="aspect-ratio:1;border-radius:2px;opacity:0;animation:evPop .55s cubic-bezier(.34,1.56,.64,1) both;background:' + c.color + ';animation-delay:' + (i * 0.014).toFixed(3) + 's;animation-play-state:' + play('share') + '"></div>';
+        return '<div data-play="share" title="' + esc(c.name + ' ' + c.pct + '%') + '" style="aspect-ratio:1;border-radius:2px;opacity:0;animation:evPop .55s cubic-bezier(.34,1.56,.64,1) both;background:' + c.color + ';animation-delay:' + (i * 0.014).toFixed(3) + 's;animation-play-state:' + play('share') + '"></div>';
       }).join('');
 
       /* --- imports bars --- */
@@ -524,7 +524,7 @@
         var color = on ? '#e8503a' : '#6f7c8d';
         return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;height:100%;justify-content:flex-end">'
           + '<span style="font-family:\'Space Grotesk\',sans-serif;font-weight:700;font-size:clamp(14px,1.8vw,21px);color:' + color + '">' + p.toFixed(0) + '%</span>'
-          + '<div style="width:100%;border-radius:2px;transform-origin:bottom;animation:evGrowY .95s cubic-bezier(.22,1,.36,1) both;background:linear-gradient(180deg,' + color + ',' + color + '33);height:' + Math.max(p, 1).toFixed(1) + '%;animation-delay:' + (i * 0.07).toFixed(2) + 's;animation-play-state:' + play('imports') + '"></div>'
+          + '<div data-play="imports" style="width:100%;border-radius:2px;transform-origin:bottom;animation:evGrowY .95s cubic-bezier(.22,1,.36,1) both;background:linear-gradient(180deg,' + color + ',' + color + '33);height:' + Math.max(p, 1).toFixed(1) + '%;animation-delay:' + (i * 0.07).toFixed(2) + 's;animation-play-state:' + play('imports') + '"></div>'
           + '<span style="font-family:\'Space Grotesk\',sans-serif;font-size:12px;color:#8b97a8">' + (isPartial(yr) ? yr + '*' : yr) + '</span></div>';
       }).join('');
 
@@ -614,9 +614,10 @@
         if (!hit.length) return;
         entries.forEach(function (e) { if (e.isIntersecting) secIO.unobserve(e.target); });
         hit.forEach(function (k) { state.seen[k] = true; });
-        /* flip any already-rendered paused elements to running */
-        Array.prototype.forEach.call(el.querySelectorAll('[style*="animation-play-state:paused"]'), function (n) {
-          n.style.animationPlayState = 'running';
+        /* start ONLY the elements whose own section has now been seen
+           (a global flip would run off-screen sections' animations too early) */
+        Array.prototype.forEach.call(el.querySelectorAll('[data-play]'), function (n) {
+          if (state.seen[n.getAttribute('data-play')]) n.style.animationPlayState = 'running';
         });
       }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
       secs.forEach(function (s) { secIO.observe(s); });
@@ -631,6 +632,14 @@
         Array.prototype.forEach.call(el.querySelectorAll('[data-anim]:not([data-played]),[data-grow]:not([data-played]),[data-count]:not([data-played])'), function (n) {
           var r = n.getBoundingClientRect();
           if (r.top < window.innerHeight && r.bottom > 0) playAnim(n);
+        });
+        /* also un-pause any on-screen bars/waffle if the section observer never fired */
+        Array.prototype.forEach.call(el.querySelectorAll('[data-play]'), function (n) {
+          var r = n.getBoundingClientRect();
+          if (r.top < window.innerHeight && r.bottom > 0) {
+            state.seen[n.getAttribute('data-play')] = true;
+            n.style.animationPlayState = 'running';
+          }
         });
       }, 1800);
     }
