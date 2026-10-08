@@ -54,6 +54,7 @@ jobs:
         run: ./scripts/node_modules/.bin/tsx scripts/sync-docs.ts
 
       - name: Pull Request を作成
+        id: cpr
         if: steps.update.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
@@ -66,3 +67,11 @@ jobs:
             ev-registrations.json
             docs/ev-registrations.json
           labels: ${{ steps.update.outputs.has_warnings == 'true' && 'data-update,needs-review' || 'data-update' }}
+
+      # 検証(validate-data.yml)が通れば自動でマージ。必須チェックが緑になるまで待ってからマージされる。
+      # （マージ先ブランチで「Require status checks (validate)」を有効にしておくこと。未設定だと検証を待たずマージされる）
+      - name: 自動マージを有効化
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --merge --auto --repo ${{ github.repository }}
