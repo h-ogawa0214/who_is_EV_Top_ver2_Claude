@@ -20,13 +20,6 @@ function loadJson<T>(p: string): T { return JSON.parse(fs.readFileSync(p, 'utf8'
 function clone<T>(o: T): T { return JSON.parse(JSON.stringify(o)); }
 function deepEq(a: unknown, b: unknown) { return JSON.stringify(a) === JSON.stringify(b); }
 
-// グラフ上限用に、値を上回る「きりのよい」1万台単位の数を返す（最低5%の余白を確保）
-function niceMax(v: number): number {
-  let base = Math.ceil(v / 10000) * 10000;
-  if (base < v * 1.05) base += 10000;
-  return base;
-}
-
 function recalcYearFromMonths(data: EvData, y: string) {
   const makerKeys = Object.keys(data.makers);
   const acc: Record<string, number> = {};
@@ -64,19 +57,6 @@ export function applyResults(before: EvData, results: FetchResult[]): { data: Ev
   }
   data.meta.updated = new Date().toISOString().slice(0, 10);
   data.meta.sourceDetail = regenSourceDetail(data);
-
-  // trendMax はトレンドグラフの上限。年合計の最大が到達したら自動で引き上げる
-  // （更新を止めず、PR本文に明記して人が最終確認できるようにする）。
-  const maxTotal = Math.max.apply(null, Object.keys(data.years).map(
-    (y) => Object.values(data.years[y]).reduce((s, v) => s + v, 0)));
-  if (data.meta.trendMax <= maxTotal) {
-    const raised = niceMax(maxTotal);
-    log.warnings.push(
-      `meta.trendMax を ${data.meta.trendMax.toLocaleString('en-US')} → ${raised.toLocaleString('en-US')} に自動引き上げ`
-      + `（年合計の最大が ${maxTotal.toLocaleString('en-US')}台 に到達）。グラフの上限値なので、必要なら手動で調整可。`);
-    data.meta.trendMax = raised;
-  }
-
   return { data, log, srcUrl };
 }
 
