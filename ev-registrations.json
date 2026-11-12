@@ -1,17 +1,17 @@
 {
   "meta": {
-    "updated": "2026-10-08",
+    "updated": "2026-11-12",
     "unit": "台",
-    "trendMax": 90000,
+    "trendMax": 110000,
     "source": "一般社団法人日本自動車販売協会連合会「燃料別登録台数」",
     "sourceUrl": "https://www.jada.or.jp/pages/342/",
-    "sourceDetail": "（年別統計 2021年〜2025年／燃料別メーカー別登録台数 月報 2026年1月〜9月）",
+    "sourceDetail": "（年別統計 2021年〜2025年／燃料別メーカー別登録台数 月報 2026年1月〜10月）",
     "note": "自販連『燃料別登録台数統計』より、乗用車のEV（BEV）を集計。登録車（乗用車）のみで軽自動車は含まない。日本メーカーの海外生産車は輸入車に計上される。PHV・HV・FCVは含まない。輸入車はブランド別の内訳が公表されていないため合計値。2026年は月報1月〜8月の累計で、通年値ではない。スズキ・ダイハツは同期間にEVの登録がないため掲載していない。"
   },
   "partial": {
     "2026": {
-      "throughMonth": 9,
-      "label": "1〜9月"
+      "throughMonth": 10,
+      "label": "1〜10月"
     }
   },
   "makers": {
@@ -112,11 +112,11 @@
       "mitsubishi": 0
     },
     "2026": {
-      "import": 34837,
-      "toyota": 23441,
-      "nissan": 16173,
-      "honda": 4967,
-      "subaru": 3463,
+      "import": 39045,
+      "toyota": 27549,
+      "nissan": 17485,
+      "honda": 7176,
+      "subaru": 4359,
       "mazda": 0,
       "mitsubishi": 0
     }
@@ -210,6 +210,16 @@
         "nissan": 2086,
         "honda": 1055,
         "subaru": 553,
+        "mazda": 0,
+        "mitsubishi": 0
+      },
+      {
+        "m": 10,
+        "import": 4208,
+        "toyota": 4108,
+        "nissan": 1312,
+        "honda": 2209,
+        "subaru": 896,
         "mazda": 0,
         "mitsubishi": 0
       }
